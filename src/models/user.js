@@ -13,9 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: "id",
         as: "Role",
       });
-      User.hasOne(models.PersonWord, {
-        foreignKey: "id",
-      });
+      User.hasMany(models.PersonWord, { foreignKey: "idPerson" });
     }
   }
   User.init(
@@ -23,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       username: DataTypes.STRING,
       password: DataTypes.STRING,
       name: DataTypes.STRING,
-      gender: DataTypes.STRING,
+      gender: DataTypes.TINYINT,
       birthday: DataTypes.DATE,
       address: DataTypes.STRING,
       telephone: DataTypes.STRING,

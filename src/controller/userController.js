@@ -17,9 +17,21 @@ let updatePasswordController = async (req, res) => {
   let MessageUpdatePassword = await userService.handleUpdatePassword(req.body);
   return res.status(200).json(MessageUpdatePassword);
 };
+let addPersonWordController = async (req, res) => {
+  let MessageAddPersonWord = await userService.handleAddPersonWord(req.body);
+  return res.status(200).json(MessageAddPersonWord);
+};
+let listPersonWordController = async (req, res) => {
+  let MessageListPersonWord = await userService.handleListPersonWord(
+    req.query.idPerson
+  );
+  return res.status(200).json(MessageListPersonWord);
+};
 module.exports = {
   loginController,
   registerController,
   forgotPasswordController,
   updatePasswordController,
+  addPersonWordController,
+  listPersonWordController,
 };

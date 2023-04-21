@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import db from "../models";
 import EmailController from "../controller/EmailController";
 import jwt from "jsonwebtoken";
@@ -18,9 +19,27 @@ let handleRegister = async (data) => {
         errMessage: "Email already exists",
       };
     }
-    const token = jwt.sign({ userData: data }, process.env.TOKEN_KEY, {
-      expiresIn: "2h",
-    });
+
+    const keyAES = Buffer.from(process.env.AES_KEY, "utf8").slice(0, 32);
+    let encryptedData = crypto.createCipheriv(
+      "aes-256-cbc",
+      keyAES,
+      Buffer.alloc(16)
+    );
+    let encryptedBuffer = Buffer.concat([
+      encryptedData.update(JSON.stringify(data), "utf8"),
+      encryptedData.final(),
+    ]);
+
+    // Chuỗi mã hóa dưới dạng base64
+    const encryptedBase64 = encryptedBuffer.toString("base64");
+    const token = jwt.sign(
+      { userData: encryptedBase64 },
+      process.env.TOKEN_KEY,
+      {
+        expiresIn: "2h",
+      }
+    );
 
     createOTPandDestroy(email);
     return {
@@ -46,7 +65,7 @@ let createOTPandDestroy = async (email) => {
     count: 3,
   });
   let scheduleDeleteCode = schedule.scheduleJob(
-    Date.now() + 3 * 30 * 1000,
+    Date.now() + 2 * 30 * 1000,
     async () => {
       await db.UserVerify.destroy({
         where: {
@@ -75,18 +94,24 @@ let handleLogin = async (data) => {
       },
     ],
   });
-  checkAccountLogin.Role = checkAccountLogin["Role.role"];
-  delete checkAccountLogin["Role.role"];
-
   if (
     !checkAccountLogin ||
     bcrypt.compareSync(password, checkAccountLogin.password)
   ) {
+    checkAccountLogin.Role = checkAccountLogin["Role.role"];
+    delete checkAccountLogin["Role.role"];
     delete checkAccountLogin["password"];
+    const token = jwt.sign(
+      { userData: checkAccountLogin },
+      process.env.TOKEN_KEY,
+      {
+        expiresIn: "2h",
+      }
+    );
     return {
       errCode: 0,
       errMessage: "Login Successfully",
-      userData: checkAccountLogin,
+      userData: { checkAccountLogin, token },
     };
   } else {
     return {
@@ -130,9 +155,54 @@ let handleUpdatePassword = async (data) => {
 let hashPassword = (password) => {
   return bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 };
+let handleAddPersonWord = async (data) => {
+  let { idPerson, idWord } = data;
+  try {
+    let checkWordExist = await db.PersonWord.findOne({
+      where: { idPerson, idWord },
+    });
+    if (!checkWordExist) {
+      await db.PersonWord.create({ idPerson, idWord });
+      return {
+        errCode: 0,
+        errorMessage: "add person word successfully",
+      };
+    } else {
+      return {
+        errCode: 0,
+        errorMessage: "Word is existed",
+      };
+    }
+  } catch (error) {
+    return {
+      errCode: 0,
+      errorMessage: "add person failed",
+    };
+  }
+};
+let handleListPersonWord = async (idPerson) => {
+  try {
+    let listPersonWord = await db.PersonWord.findAll({
+      where: { idPerson: idPerson },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      include: [
+        {
+          model: db.Word,
+          required: false,
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+        },
+      ],
+    });
+    return listPersonWord;
+  } catch (error) {
+    return error;
+  }
+};
 module.exports = {
   handleRegister,
   handleLogin,
   handleForgotPassword,
   handleUpdatePassword,
+  handleAddPersonWord,
+  handleListPersonWord,
 };

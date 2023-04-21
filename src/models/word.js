@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: "id",
         as: "TopicVocabulary",
       });
+      Word.hasMany(models.PersonWord, { foreignKey: "idWord" });
     }
   }
   Word.init(

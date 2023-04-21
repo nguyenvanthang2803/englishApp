@@ -15,7 +15,9 @@ const verifyToken = (req, res, next) => {
   let tokenReq = req.headers.authorization.split(" ")[1];
   try {
     const decoded = jwt.verify(tokenReq, process.env.TOKEN_KEY);
-    req.body = { ...req.body, decoded };
+    if (req.originalUrl == "/api/verifyRegister") {
+      req.body = { ...req.body, decoded };
+    }
     next();
   } catch (err) {
     return res.status(401).send(err);

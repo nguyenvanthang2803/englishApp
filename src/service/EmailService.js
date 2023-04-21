@@ -1,22 +1,43 @@
 import db from "../models";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 let handleEmailVerifyRegister = async (req) => {
+  // Tạo một đối tượng giải mã với thuật toán AES-256-CBC
+  let data = req.body;
+  const encryptedBuffer = Buffer.from(data.decoded.userData, "base64");
+  const keyAES = Buffer.from(process.env.AES_KEY, "utf8").slice(0, 32);
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    keyAES,
+    Buffer.alloc(16)
+  );
+
+  // Giải mã dữ liệu
+  let decryptedBuffer = Buffer.concat([
+    decipher.update(encryptedBuffer),
+    decipher.final(),
+  ]);
+
+  // Chuỗi dữ liệu sau khi giải mã
+  const decryptedPlaintext = decryptedBuffer.toString("utf8");
+
+  // Chuyển đổi chuỗi dữ liệu sau khi giải mã thành object JSON (nếu thích hợp)
+  const dataDecrypt = JSON.parse(decryptedPlaintext);
   try {
     let email;
-    let data = req.body;
     let dataReturn = {};
     let { OTP } = data;
     if (data.email) {
       email = data.email;
     } else {
-      email = data.decoded.userData.email;
+      email = dataDecrypt.email;
     }
     let checkOTP = await db.UserVerify.findOne({
       where: { email: email },
       raw: true,
     });
 
-    if (!checkOTP || Date.now() - checkOTP.createdAt * 1000 > 3 * 30 * 1000) {
+    if (!checkOTP || Date.now() - checkOTP.createdAt * 1000 > 2 * 30 * 1000) {
       return {
         errCode: 1,
         errMessage: "Please Register Again,Verify Code Expired",
@@ -39,9 +60,16 @@ let handleEmailVerifyRegister = async (req) => {
         });
         switch (req.originalUrl) {
           case "/api/verifyRegister": {
-            let { email, username, name, address, telephone } =
-              data.decoded.userData;
-            let password = hashPassword(data.decoded.userData.password);
+            let {
+              email,
+              username,
+              name,
+              address,
+              telephone,
+              gender,
+              birthday,
+            } = dataDecrypt;
+            let password = hashPassword(dataDecrypt.password);
             let createAccount = await db.User.create({
               email,
               password,
@@ -49,7 +77,9 @@ let handleEmailVerifyRegister = async (req) => {
               name,
               address,
               telephone,
-              roleId: 2,
+              roleId: 1,
+              gender,
+              birthday,
             });
             {
               (dataReturn.errCode = 0),

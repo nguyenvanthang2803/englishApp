@@ -13,6 +13,8 @@ let initRouteUserAccount = (app) => {
     emailController.verifyforgotPasswordOTPController
   );
   router.post("/api/verifyRegister", emailController.verifyRegisterController);
+  router.post("/api/addPersonWord", userController.addPersonWordController);
+  router.get("/api/listPersonWord", userController.listPersonWordController);
   return app.use("/", router);
 };
 
