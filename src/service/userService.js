@@ -77,7 +77,7 @@ let createOTPandDestroy = async (email) => {
   //EmailController.SendEmailOTP(email, otp);
 };
 let createOTP = () => {
-  return Math.floor(Math.random() * 100) + 1;
+  return Math.floor(100000 + Math.random() * 900000);
 };
 let handleLogin = async (data) => {
   let { email, password } = data;
