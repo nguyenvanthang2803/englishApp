@@ -27,6 +27,14 @@ let listPersonWordController = async (req, res) => {
   );
   return res.status(200).json(MessageListPersonWord);
 };
+let TestController = async (req, res) => {
+  let MessageTest = await userService.handleTest(req.query);
+  return res.status(200).json(MessageTest);
+};
+let GrammarController = async (req, res) => {
+  let MessageGrammar = await userService.handleGrammar(req.query);
+  return res.status(200).json(MessageGrammar);
+};
 module.exports = {
   loginController,
   registerController,
@@ -34,4 +42,6 @@ module.exports = {
   updatePasswordController,
   addPersonWordController,
   listPersonWordController,
+  TestController,
+  GrammarController,
 };

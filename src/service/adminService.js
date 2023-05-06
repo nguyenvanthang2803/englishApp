@@ -1,11 +1,28 @@
 import { response } from "express";
+import bcrypt from "bcrypt";
 import db from "../models";
 let handleListUser = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      let listUser = await db.User.findAll();
-      delete listUser.password;
-      resolve(listUser);
+      let listUser = await db.User.findAll({
+        attributes: [
+          ["username", "username"],
+          ["name", "name"],
+          ["email", "email"],
+          ["gender", "gender"],
+          ["birthday", "birthday"],
+          ["address", "address"],
+          ["telephone", "telephone"],
+        ],
+        raw: true,
+      });
+      listUser.map((item, index) => {
+        const date = new Date(item.birthday);
+        item.birthday = `${date.getFullYear()}-${(date.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+      });
+      resolve({ errCode: 0, errMessage: "list User", listUser: listUser });
     } catch (error) {
       reject(error);
     }
@@ -95,10 +112,120 @@ let handleAddNewWord = (req) => {
     }
   });
 };
+let handleAddNewUser = async (data) => {
+  let { email, username, name, address, telephone, gender, birthday } = data;
+  if (
+    !email ||
+    !username ||
+    !name ||
+    !address ||
+    !telephone ||
+    !gender ||
+    !birthday ||
+    !data.password
+  ) {
+    return {
+      errCode: 1,
+      errMessage: "Missing parameters required",
+    };
+  }
+  let checkAccountIsExist = await db.User.findOne({
+    where: { email: email },
+  });
+  if (checkAccountIsExist) {
+    return {
+      errCode: 1,
+      errMessage: "Email is existed",
+    };
+  }
+  let password = hashPassword(data.password);
+  try {
+    let createAccount = await db.User.create({
+      email,
+      password,
+      username,
+      name,
+      address,
+      telephone,
+      roleId: 1,
+      gender,
+      birthday,
+    });
+    return {
+      errCode: 0,
+      errMessage: "Add Successfully",
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: "Add failed",
+    };
+  }
+};
+let hashPassword = (password) => {
+  return bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+};
+let handleDeleteUser = async (email) => {
+  try {
+    await db.User.destroy({ where: { email: email } });
+    return {
+      errCode: 0,
+      errMessage: "Delete Successfully",
+    };
+  } catch (error) {
+    return {
+      errCode: 0,
+      errMessage: error,
+    };
+  }
+};
+let handleUpdateUser = async (data) => {
+  let { email, username, name, address, telephone, gender, birthday } = data;
+  if (
+    !email ||
+    !username ||
+    !name ||
+    !address ||
+    !telephone ||
+    !gender ||
+    !birthday
+  ) {
+    return {
+      errCode: 1,
+      errMessage: "Missing parameters required",
+    };
+  }
+  try {
+    let updateUser = await db.User.update(
+      {
+        email: email,
+        username: username,
+        name: name,
+        address: address,
+        telephone: telephone,
+        gender: gender,
+        birthday: birthday,
+      },
+      { where: { email: email } }
+    );
+    return {
+      errCode: 0,
+      errMessage: "Update successful",
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: "Update failed",
+    };
+  }
+};
 module.exports = {
   handleListUser,
   handleAddTopic,
   handleSearchWord,
   handleListTopic,
   handleAddNewWord,
+  handleAddNewUser,
+  handleDeleteUser,
+  handleUpdateUser,
 };

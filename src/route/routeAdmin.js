@@ -41,8 +41,12 @@ let initRouteAdmin = (app) => {
     cpUpload,
     adminController.AddNewWordController
   );
+  router.post("/api/addNewUser", adminController.AddNewUserController);
+  router.delete("/api/deleteUser", adminController.DeleteUserController);
   router.get("/api/searchWord", adminController.SearchWordController);
   router.get("/api/list-topic", adminController.ListTopicController);
+  router.put("/api/updateUser", adminController.UpdateUserController);
+  router.get("/api/refreshToken");
   return app.use("/", router);
 };
 

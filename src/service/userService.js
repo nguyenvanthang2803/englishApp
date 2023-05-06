@@ -94,24 +94,31 @@ let handleLogin = async (data) => {
       },
     ],
   });
+
   if (
-    !checkAccountLogin ||
+    checkAccountLogin &&
     bcrypt.compareSync(password, checkAccountLogin.password)
   ) {
     checkAccountLogin.Role = checkAccountLogin["Role.role"];
     delete checkAccountLogin["Role.role"];
     delete checkAccountLogin["password"];
     const token = jwt.sign(
-      { userData: checkAccountLogin },
+      {
+        token: generateRandomToken(),
+      },
       process.env.TOKEN_KEY,
       {
-        expiresIn: "2h",
+        expiresIn: "1h",
       }
     );
     return {
       errCode: 0,
       errMessage: "Login Successfully",
-      userData: { checkAccountLogin, token },
+      userData: {
+        email: checkAccountLogin.email,
+        Role: checkAccountLogin.Role,
+      },
+      token,
     };
   } else {
     return {
@@ -120,6 +127,18 @@ let handleLogin = async (data) => {
     };
   }
 };
+function generateRandomToken() {
+  var result = "";
+  var characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var charactersLength = characters.length;
+  var tokenLength = 32; // độ dài của token là 32
+  for (var i = 0; i < tokenLength; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
 let handleForgotPassword = async (email) => {
   let checkAccountIsExist = await db.User.findOne({
     where: { email: email },
@@ -139,6 +158,15 @@ let handleForgotPassword = async (email) => {
 let handleUpdatePassword = async (data) => {
   try {
     let { email, password } = data;
+    let checkAccountIsExist = await db.User.findOne({
+      where: { email: email },
+    });
+    if (!checkAccountIsExist) {
+      return {
+        errCode: 1,
+        errMessage: "Email not found",
+      };
+    }
     password = hashPassword(password);
     await db.User.update({ password: password }, { where: { email: email } });
     return {
@@ -198,6 +226,49 @@ let handleListPersonWord = async (idPerson) => {
     return error;
   }
 };
+let handleTest = async (data) => {
+  try {
+    let { name } = data;
+    let test = await db.TypeTest.findAll({
+      where: { name },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      include: [
+        {
+          model: db.Test,
+          attributes: ["name", "keyA", "keyB", "keyC", "keyD", "keyCorrect"],
+        },
+      ],
+    });
+    return {
+      errCode: 0,
+      data: test,
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: error,
+    };
+  }
+};
+let handleGrammar = async (data) => {
+  try {
+    let { name } = data;
+    if (!name) {
+      let allGrammar = await db.Grammar.findAll({
+        attributes: ["name"],
+      });
+      return allGrammar;
+    } else {
+      let OnlyGrammar = await db.Grammar.findAll({
+        where: { name: name },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+      });
+      return OnlyGrammar;
+    }
+  } catch (error) {
+    return error.message;
+  }
+};
 module.exports = {
   handleRegister,
   handleLogin,
@@ -205,4 +276,6 @@ module.exports = {
   handleUpdatePassword,
   handleAddPersonWord,
   handleListPersonWord,
+  handleTest,
+  handleGrammar,
 };

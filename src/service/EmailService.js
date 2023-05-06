@@ -4,25 +4,27 @@ import crypto from "crypto";
 let handleEmailVerifyRegister = async (req) => {
   // Tạo một đối tượng giải mã với thuật toán AES-256-CBC
   let data = req.body;
-  const encryptedBuffer = Buffer.from(data.decoded.userData, "base64");
-  const keyAES = Buffer.from(process.env.AES_KEY, "utf8").slice(0, 32);
-  const decipher = crypto.createDecipheriv(
-    "aes-256-cbc",
-    keyAES,
-    Buffer.alloc(16)
-  );
+  if (req.originalUrl == "/api/verifyRegister") {
+    const encryptedBuffer = Buffer.from(data.decoded.userData, "base64");
+    const keyAES = Buffer.from(process.env.AES_KEY, "utf8").slice(0, 32);
+    const decipher = crypto.createDecipheriv(
+      "aes-256-cbc",
+      keyAES,
+      Buffer.alloc(16)
+    );
 
-  // Giải mã dữ liệu
-  let decryptedBuffer = Buffer.concat([
-    decipher.update(encryptedBuffer),
-    decipher.final(),
-  ]);
+    // Giải mã dữ liệu
+    let decryptedBuffer = Buffer.concat([
+      decipher.update(encryptedBuffer),
+      decipher.final(),
+    ]);
 
-  // Chuỗi dữ liệu sau khi giải mã
-  const decryptedPlaintext = decryptedBuffer.toString("utf8");
+    // Chuỗi dữ liệu sau khi giải mã
+    const decryptedPlaintext = decryptedBuffer.toString("utf8");
 
-  // Chuyển đổi chuỗi dữ liệu sau khi giải mã thành object JSON (nếu thích hợp)
-  const dataDecrypt = JSON.parse(decryptedPlaintext);
+    // Chuyển đổi chuỗi dữ liệu sau khi giải mã thành object JSON (nếu thích hợp)
+    const dataDecrypt = JSON.parse(decryptedPlaintext);
+  }
   try {
     let email;
     let dataReturn = {};
@@ -88,6 +90,15 @@ let handleEmailVerifyRegister = async (req) => {
             break;
           }
           case "/api/verifyforgotPasswordOTP": {
+            let checkAccountIsExist = await db.User.findOne({
+              where: { email: email },
+            });
+            if (!checkAccountIsExist) {
+              return {
+                errCode: 1,
+                errMessage: "Email not found",
+              };
+            }
             {
               (dataReturn.errCode = 0),
                 (dataReturn.errorMessage = "Fill New Password");

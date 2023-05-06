@@ -19,10 +19,25 @@ let ListTopicController = async (req, res) => {
   let messageListTopic = await adminService.handleListTopic(req);
   return res.status(200).json(messageListTopic);
 };
+let AddNewUserController = async (req, res) => {
+  let messageAddNewUser = await adminService.handleAddNewUser(req.body);
+  return res.status(200).json(messageAddNewUser);
+};
+let DeleteUserController = async (req, res) => {
+  let messageDeleteUser = await adminService.handleDeleteUser(req.body.email);
+  return res.status(200).json(messageDeleteUser);
+};
+let UpdateUserController = async (req, res) => {
+  let messageUpdateUser = await adminService.handleUpdateUser(req.body);
+  return res.status(200).json(messageUpdateUser);
+};
 module.exports = {
   ListUserController,
   SearchWordController,
   AddTopicController,
   AddNewWordController,
   ListTopicController,
+  AddNewUserController,
+  DeleteUserController,
+  UpdateUserController,
 };

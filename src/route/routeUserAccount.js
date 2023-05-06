@@ -15,6 +15,8 @@ let initRouteUserAccount = (app) => {
   router.post("/api/verifyRegister", emailController.verifyRegisterController);
   router.post("/api/addPersonWord", userController.addPersonWordController);
   router.get("/api/listPersonWord", userController.listPersonWordController);
+  router.get("/api/test", userController.TestController);
+  router.get("/api/grammar", userController.GrammarController);
   return app.use("/", router);
 };
 
