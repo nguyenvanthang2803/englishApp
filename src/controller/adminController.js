@@ -17,6 +17,7 @@ let SearchWordController = async (req, res) => {
 };
 let ListTopicController = async (req, res) => {
   let messageListTopic = await adminService.handleListTopic(req);
+
   return res.status(200).json(messageListTopic);
 };
 let AddNewUserController = async (req, res) => {

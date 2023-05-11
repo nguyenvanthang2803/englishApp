@@ -42,8 +42,9 @@ app.use(
 // });
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(auth);
 app.use(express.static(path.join(__dirname, "public")));
+app.use(auth);
+
 initRouteAdmin(app);
 initRouteUserAccount(app);
 connectDB();

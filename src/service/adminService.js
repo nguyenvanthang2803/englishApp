@@ -55,8 +55,9 @@ let handleListTopic = async (req, res) => {
     if (Object.keys(req.query).length === 0) {
       const listTopic = await db.Topic.findAll({
         attributes: { exclude: ["createdAt", "updatedAt"] },
+        raw: true,
       });
-      return listTopic;
+      return { errCode: 0, list: listTopic };
     }
     let topic = req.query.topic;
     let ListVocabulary = await db.Topic.findAll({
@@ -70,8 +71,22 @@ let handleListTopic = async (req, res) => {
           attributes: { exclude: ["createdAt", "updatedAt"] },
         },
       ],
+      raw: true,
     });
-    return ListVocabulary;
+    let vocabularyList = ListVocabulary.map((vocabulary) => {
+      return {
+        id: vocabulary.id,
+        en: vocabulary["TopicVocabulary.en"],
+        vn: vocabulary["TopicVocabulary.vn"],
+        type: vocabulary["TopicVocabulary.type"],
+        IPA: vocabulary["TopicVocabulary.IPA"],
+        example: vocabulary["TopicVocabulary.example"],
+        image: vocabulary["TopicVocabulary.image"],
+        audio: vocabulary["TopicVocabulary.audio"],
+        idTopic: vocabulary["TopicVocabulary.idTopic"],
+      };
+    });
+    return { errCode: 0, list: vocabularyList };
   } catch (error) {
     return error;
   }
