@@ -22,7 +22,13 @@ module.exports = {
         type: Sequelize.STRING,
       },
       idTopic: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: "Topics",
+          key: "id",
+          onDelete: "CASCADE",
+        },
       },
       example: {
         type: Sequelize.STRING,

@@ -228,20 +228,64 @@ let handleListPersonWord = async (idPerson) => {
 };
 let handleTest = async (data) => {
   try {
-    let { name } = data;
-    let test = await db.TypeTest.findAll({
-      where: { name },
-      attributes: { exclude: ["createdAt", "updatedAt"] },
-      include: [
-        {
-          model: db.Test,
-          attributes: ["name", "keyA", "keyB", "keyC", "keyD", "keyCorrect"],
-        },
-      ],
+    let { name, pageNumber } = data;
+    let test;
+
+    if (name == null) {
+      test = await db.TypeTest.findAndCountAll({
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+        include: [
+          {
+            model: db.Test,
+            attributes: ["name", "keyA", "keyB", "keyC", "keyD", "keyCorrect"],
+          },
+        ],
+        limit: 10,
+        offset: pageNumber * 10,
+      });
+      const testArr = test.rows.map((item) => {
+        return item.Test;
+      });
+
+      return {
+        errCode: 0,
+        count: test.count,
+        listTest: testArr,
+      };
+    } else if (name == "grammar") {
+      test = await db.TypeTest.findAll({
+        where: { name: { [db.Sequelize.Op.ne]: "Image" } },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+        include: [
+          {
+            model: db.Test,
+            attributes: ["name", "keyA", "keyB", "keyC", "keyD", "keyCorrect"],
+          },
+        ],
+      });
+    } else {
+      test = await db.TypeTest.findAll({
+        where: { name },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+        include: [
+          {
+            model: db.Test,
+            attributes: ["name", "keyA", "keyB", "keyC", "keyD", "keyCorrect"],
+          },
+        ],
+      });
+    }
+    const testArr = test.map((item) => {
+      return item.Test;
     });
+    // Lấy ngẫu nhiên 10 phần tử từ mảng testArr
+    const randomTestArr = testArr
+      .sort(() => Math.random() - Math.random())
+      .slice(0, 10);
+
     return {
       errCode: 0,
-      data: test,
+      listTest: randomTestArr,
     };
   } catch (error) {
     return {
@@ -269,6 +313,60 @@ let handleGrammar = async (data) => {
     return error.message;
   }
 };
+let handleDeleteTest = async (name) => {
+  try {
+    await db.Test.destroy({ where: { name: name } });
+    return {
+      errCode: 0,
+      errMessage: "Delete Successfully",
+    };
+  } catch (error) {
+    return {
+      errCode: 0,
+      errMessage: error,
+    };
+  }
+};
+let handleEditTest = async (req) => {
+  let image;
+  if (req.files.image) {
+    let pathImage = req.files.image[0].path.replace(/\\/g, "/");
+    image = pathImage.replace("src/public/", "");
+  }
+  let { keyA, keyB, keyC, keyD, keyCorrect, name } = req.body;
+  let nameNew = req.body.nameNew;
+  if (!nameNew) {
+    nameNew = image;
+  }
+  if (!keyA || !keyB || !name || !keyC || !keyD || !keyCorrect) {
+    return {
+      errCode: 1,
+      errMessage: "Missing parameters required",
+    };
+  }
+  try {
+    let updateTest = await db.Test.update(
+      {
+        name: nameNew,
+        keyA: keyA,
+        keyB: keyB,
+        keyC: keyC,
+        keyD: keyD,
+        keyCorrect: keyCorrect,
+      },
+      { where: { name } }
+    );
+    return {
+      errCode: 0,
+      errMessage: "Update successful",
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: "Update failed",
+    };
+  }
+};
 module.exports = {
   handleRegister,
   handleLogin,
@@ -278,4 +376,6 @@ module.exports = {
   handleListPersonWord,
   handleTest,
   handleGrammar,
+  handleDeleteTest,
+  handleEditTest,
 };

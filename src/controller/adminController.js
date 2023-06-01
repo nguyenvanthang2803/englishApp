@@ -32,6 +32,14 @@ let UpdateUserController = async (req, res) => {
   let messageUpdateUser = await adminService.handleUpdateUser(req.body);
   return res.status(200).json(messageUpdateUser);
 };
+let DeleteWordController = async (req, res) => {
+  let messageDeleteWord = await adminService.handleDeleteWord(req.body.en);
+  return res.status(200).json(messageDeleteWord);
+};
+let DeleteTopicController = async (req, res) => {
+  let messageDeleteTopic = await adminService.handleDeleteTopic(req.body.topic);
+  return res.status(200).json(messageDeleteTopic);
+};
 module.exports = {
   ListUserController,
   SearchWordController,
@@ -41,4 +49,6 @@ module.exports = {
   AddNewUserController,
   DeleteUserController,
   UpdateUserController,
+  DeleteWordController,
+  DeleteTopicController,
 };

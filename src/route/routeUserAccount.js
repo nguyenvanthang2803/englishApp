@@ -17,6 +17,8 @@ let initRouteUserAccount = (app) => {
   router.get("/api/listPersonWord", userController.listPersonWordController);
   router.get("/api/test", userController.TestController);
   router.get("/api/grammar", userController.GrammarController);
+  router.delete("/api/deleteTest", userController.DeleteTestController);
+
   return app.use("/", router);
 };
 

@@ -1,5 +1,7 @@
 import express from "express";
 import adminController from "../controller/adminController";
+import userController from "../controller/userController";
+
 let router = express.Router();
 import multer from "multer";
 import path from "path";
@@ -41,12 +43,15 @@ let initRouteAdmin = (app) => {
     cpUpload,
     adminController.AddNewWordController
   );
+  router.delete("/api/deleteTopic", adminController.DeleteTopicController);
   router.post("/api/addNewUser", adminController.AddNewUserController);
   router.delete("/api/deleteUser", adminController.DeleteUserController);
+  router.delete("/api/deleteWord", adminController.DeleteWordController);
   router.get("/api/searchWord", adminController.SearchWordController);
   router.get("/api/list-topic", adminController.ListTopicController);
   router.put("/api/updateUser", adminController.UpdateUserController);
   router.get("/api/refreshToken");
+  router.put("/api/editTest", cpUpload, userController.EditTestController);
   return app.use("/", router);
 };
 

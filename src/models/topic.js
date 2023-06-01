@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       Topic.hasMany(models.Word, {
         foreignKey: "idTopic",
         as: "TopicVocabulary",
+        onDelete: "CASCADE",
       });
     }
   }

@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idTopic",
         targetKey: "id",
         as: "TopicVocabulary",
+        onDelete: "CASCADE",
       });
       Word.hasMany(models.PersonWord, { foreignKey: "idWord" });
     }

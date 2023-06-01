@@ -73,6 +73,7 @@ let handleListTopic = async (req, res) => {
       ],
       raw: true,
     });
+
     let vocabularyList = ListVocabulary.map((vocabulary) => {
       return {
         id: vocabulary.id,
@@ -86,6 +87,15 @@ let handleListTopic = async (req, res) => {
         idTopic: vocabulary["TopicVocabulary.idTopic"],
       };
     });
+    if (
+      !vocabularyList[0].en &&
+      !vocabularyList[0].vn &&
+      !vocabularyList[0].type &&
+      !vocabularyList[0].IPA &&
+      !vocabularyList[0].example
+    ) {
+      return { errCode: 0, list: null };
+    }
     return { errCode: 0, list: vocabularyList };
   } catch (error) {
     return error;
@@ -100,7 +110,10 @@ let handleAddNewWord = (req) => {
     let data = req.body;
     let { en, vn, type, IPA, idTopic, example } = data;
     try {
-      let checkWordExist = db.Word.findAll({ where: { en: en, IPA: IPA } });
+      let checkWordExist = await db.Word.findOne({
+        where: { en: en, IPA: IPA },
+        raw: true,
+      });
       if (!checkWordExist) {
         await db.Word.create({
           en,
@@ -234,6 +247,34 @@ let handleUpdateUser = async (data) => {
     };
   }
 };
+let handleDeleteWord = async (en) => {
+  try {
+    await db.Word.destroy({ where: { en: en } });
+    return {
+      errCode: 0,
+      errMessage: "Delete Successfully",
+    };
+  } catch (error) {
+    return {
+      errCode: 0,
+      errMessage: error,
+    };
+  }
+};
+let handleDeleteTopic = async (topic) => {
+  try {
+    await db.Topic.destroy({ where: { topicName: topic } });
+    return {
+      errCode: 0,
+      errMessage: "Delete Successfully",
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: error,
+    };
+  }
+};
 module.exports = {
   handleListUser,
   handleAddTopic,
@@ -243,4 +284,6 @@ module.exports = {
   handleAddNewUser,
   handleDeleteUser,
   handleUpdateUser,
+  handleDeleteWord,
+  handleDeleteTopic,
 };
