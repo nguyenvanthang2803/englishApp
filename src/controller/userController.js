@@ -43,6 +43,10 @@ let EditTestController = async (req, res) => {
   let messageEditTest = await userService.handleEditTest(req);
   return res.status(200).json(messageEditTest);
 };
+let resendOTPController = async (req, res) => {
+  let messageResendOTP = await userService.handleResendOTP(req.body.email);
+  return res.status(200).json(messageResendOTP);
+};
 module.exports = {
   loginController,
   registerController,
@@ -54,4 +58,5 @@ module.exports = {
   GrammarController,
   DeleteTestController,
   EditTestController,
+  resendOTPController,
 };

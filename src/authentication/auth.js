@@ -20,7 +20,8 @@ const verifyToken = (req, res, next) => {
     req.originalUrl == "/api/register" ||
     req.originalUrl == "/api/forgotPassword" ||
     req.originalUrl == "/api/verifyforgotPasswordOTP" ||
-    req.originalUrl == "/api/updatePassword"
+    req.originalUrl == "/api/updatePassword" ||
+    req.originalUrl == "/api/resendOTP"
   ) {
     return next();
   }

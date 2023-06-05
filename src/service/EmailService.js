@@ -4,6 +4,7 @@ import crypto from "crypto";
 let handleEmailVerifyRegister = async (req) => {
   // Tạo một đối tượng giải mã với thuật toán AES-256-CBC
   let data = req.body;
+  let dataDecrypt;
   if (req.originalUrl == "/api/verifyRegister") {
     const encryptedBuffer = Buffer.from(data.decoded.userData, "base64");
     const keyAES = Buffer.from(process.env.AES_KEY, "utf8").slice(0, 32);
@@ -23,7 +24,7 @@ let handleEmailVerifyRegister = async (req) => {
     const decryptedPlaintext = decryptedBuffer.toString("utf8");
 
     // Chuyển đổi chuỗi dữ liệu sau khi giải mã thành object JSON (nếu thích hợp)
-    const dataDecrypt = JSON.parse(decryptedPlaintext);
+    dataDecrypt = JSON.parse(decryptedPlaintext);
   }
   try {
     let email;

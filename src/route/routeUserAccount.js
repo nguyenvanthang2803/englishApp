@@ -6,6 +6,7 @@ let router = express.Router();
 let initRouteUserAccount = (app) => {
   router.post("/api/login", userController.loginController);
   router.post("/api/register", userController.registerController);
+  router.post("/api/resendOTP", userController.resendOTPController);
   router.post("/api/forgotPassword", userController.forgotPasswordController);
   router.post("/api/updatePassword", userController.updatePasswordController);
   router.post(

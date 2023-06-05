@@ -79,6 +79,22 @@ let createOTPandDestroy = async (email) => {
 let createOTP = () => {
   return Math.floor(100000 + Math.random() * 900000);
 };
+let handleResendOTP = async (email) => {
+  let checkEmailVerify = await db.UserVerify.findOne({
+    where: { email: email },
+  });
+  if (checkEmailVerify) {
+    return {
+      errCode: 1,
+      errMessage: "OTP not yet expired, please check your email again",
+    };
+  }
+  createOTPandDestroy(email);
+  return {
+    errCode: 0,
+    errMessage: "Check OTP in your email",
+  };
+};
 let handleLogin = async (data) => {
   let { email, password } = data;
   let checkAccountLogin = await db.User.findOne({
@@ -143,10 +159,19 @@ let handleForgotPassword = async (email) => {
   let checkAccountIsExist = await db.User.findOne({
     where: { email: email },
   });
+  let checkAcountSend = await db.UserVerify.findOne({
+    where: { email: email },
+  });
   if (!checkAccountIsExist) {
     return {
       errCode: 1,
       errMessage: "Email not found",
+    };
+  }
+  if (checkAcountSend) {
+    return {
+      errCode: 1,
+      errMessage: "OTP be sended, not yet expired,please check your email",
     };
   }
   createOTPandDestroy(email);
@@ -378,4 +403,5 @@ module.exports = {
   handleGrammar,
   handleDeleteTest,
   handleEditTest,
+  handleResendOTP,
 };
