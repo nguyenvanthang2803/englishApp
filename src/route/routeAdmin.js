@@ -37,6 +37,7 @@ const cpUpload = upload.fields([
 
 let initRouteAdmin = (app) => {
   router.get("/api/listUser", adminController.ListUserController);
+  router.get("/api/InfoUser", adminController.InfoUserController);
   router.post("/api/addTopic", adminController.AddTopicController);
   router.post(
     "/api/addNewWord",

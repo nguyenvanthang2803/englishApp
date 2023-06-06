@@ -24,9 +24,41 @@ let handleListUser = () => {
       });
       resolve({ errCode: 0, errMessage: "list User", listUser: listUser });
     } catch (error) {
-      reject(error);
+      reject({ errCode: 0, errMessage: error });
     }
   });
+};
+let handleInfoUser = async (email) => {
+  try {
+    let user = await db.User.findOne({
+      where: { email: email },
+      attributes: [
+        ["username", "username"],
+        ["name", "name"],
+        ["email", "email"],
+        ["gender", "gender"],
+        ["birthday", "birthday"],
+        ["address", "address"],
+        ["telephone", "telephone"],
+      ],
+      raw: true,
+    });
+    const date = new Date(user.birthday);
+    user.birthday = `${date.getFullYear()}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+    user.gender = String(user.gender);
+    return {
+      errCode: 0,
+      errMessage: "Successfully",
+      dataUser: user,
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: error,
+    };
+  }
 };
 let handleAddTopic = (topic) => {
   return new Promise(async (resolve, reject) => {
@@ -37,7 +69,10 @@ let handleAddTopic = (topic) => {
         errMessage: "Add new Topic sucessfully ",
       });
     } catch (error) {
-      reject(error);
+      reject({
+        errCode: 0,
+        errMessage: error,
+      });
     }
   });
 };
@@ -48,7 +83,11 @@ let handleSearchWord = async (data) => {
       en: data,
     },
   });
-  return listWord;
+  return {
+    errCode: 0,
+    errMessage: "Successfully ",
+    listWord: listWord,
+  };
 };
 let handleListTopic = async (req, res) => {
   try {
@@ -57,7 +96,7 @@ let handleListTopic = async (req, res) => {
         attributes: { exclude: ["createdAt", "updatedAt"] },
         raw: true,
       });
-      return { errCode: 0, list: listTopic };
+      return { errCode: 0, errMessage: "Successfully", list: listTopic };
     }
     let topic = req.query.topic;
     let ListVocabulary = await db.Topic.findAll({
@@ -94,9 +133,9 @@ let handleListTopic = async (req, res) => {
       !vocabularyList[0].IPA &&
       !vocabularyList[0].example
     ) {
-      return { errCode: 0, list: null };
+      return { errCode: 0, errMessage: "False", list: null };
     }
-    return { errCode: 0, list: vocabularyList };
+    return { errCode: 0, errMessage: "Successfully", list: vocabularyList };
   } catch (error) {
     return error;
   }
@@ -286,4 +325,5 @@ module.exports = {
   handleUpdateUser,
   handleDeleteWord,
   handleDeleteTopic,
+  handleInfoUser,
 };

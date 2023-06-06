@@ -218,18 +218,18 @@ let handleAddPersonWord = async (data) => {
       await db.PersonWord.create({ idPerson, idWord });
       return {
         errCode: 0,
-        errorMessage: "add person word successfully",
+        errMessage: "add person word successfully",
       };
     } else {
       return {
-        errCode: 0,
-        errorMessage: "Word is existed",
+        errCode: 1,
+        errMessage: "Word is existed",
       };
     }
   } catch (error) {
     return {
-      errCode: 0,
-      errorMessage: "add person failed",
+      errCode: 1,
+      errMessage: "add person failed",
     };
   }
 };
@@ -246,9 +246,13 @@ let handleListPersonWord = async (idPerson) => {
         },
       ],
     });
-    return listPersonWord;
+    return {
+      errCode: 0,
+      errMessage: "Successfully",
+      listPersonWord: listPersonWord,
+    };
   } catch (error) {
-    return error;
+    return { errCode: 0, errMessage: error };
   }
 };
 let handleTest = async (data) => {
@@ -310,6 +314,7 @@ let handleTest = async (data) => {
 
     return {
       errCode: 0,
+      errMessage: "Successfully",
       listTest: randomTestArr,
     };
   } catch (error) {
@@ -332,10 +337,17 @@ let handleGrammar = async (data) => {
         where: { name: name },
         attributes: { exclude: ["createdAt", "updatedAt"] },
       });
-      return OnlyGrammar;
+      return {
+        errCode: 0,
+        errMessage: "Successfully",
+        OnlyGrammar: OnlyGrammar,
+      };
     }
   } catch (error) {
-    return error.message;
+    return {
+      errCode: 0,
+      errMessage: error,
+    };
   }
 };
 let handleDeleteTest = async (name) => {

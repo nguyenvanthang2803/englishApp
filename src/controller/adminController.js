@@ -3,6 +3,11 @@ let ListUserController = async (req, res) => {
   let messageListUser = await adminService.handleListUser();
   return res.status(200).json(messageListUser);
 };
+let InfoUserController = async (req, res) => {
+  let messageInfoUser = await adminService.handleInfoUser(req.query.email);
+  return res.status(200).json(messageInfoUser);
+};
+
 let AddTopicController = async (req, res) => {
   let messageAddTopic = await adminService.handleAddTopic(req.body.topic);
   return res.status(200).json(messageAddTopic);
@@ -51,4 +56,5 @@ module.exports = {
   UpdateUserController,
   DeleteWordController,
   DeleteTopicController,
+  InfoUserController,
 };
