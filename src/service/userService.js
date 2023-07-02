@@ -97,6 +97,7 @@ let handleResendOTP = async (email) => {
 };
 let handleLogin = async (data) => {
   let { email, password } = data;
+
   let checkAccountLogin = await db.User.findOne({
     where: { email: email },
     raw: true,
@@ -124,13 +125,15 @@ let handleLogin = async (data) => {
       },
       process.env.TOKEN_KEY,
       {
-        expiresIn: "1h",
+        expiresIn: "1w",
       }
     );
+    checkAccountLogin.id = String(checkAccountLogin.id);
     return {
       errCode: 0,
       errMessage: "Login Successfully",
       userData: {
+        id: checkAccountLogin.id,
         email: checkAccountLogin.email,
         Role: checkAccountLogin.Role,
       },
@@ -154,7 +157,6 @@ function generateRandomToken() {
   }
   return result;
 }
-
 let handleForgotPassword = async (email) => {
   let checkAccountIsExist = await db.User.findOne({
     where: { email: email },
@@ -245,11 +247,26 @@ let handleListPersonWord = async (idPerson) => {
           attributes: { exclude: ["createdAt", "updatedAt"] },
         },
       ],
+      raw: true,
+    });
+
+    const transformedList = listPersonWord.map((item) => {
+      return {
+        id: item["Word.id"],
+        en: item["Word.en"],
+        vn: item["Word.vn"],
+        type: item["Word.type"],
+        IPA: item["Word.IPA"],
+        example: item["Word.example"],
+        image: item["Word.image"],
+        audio: item["Word.audio"],
+        idTopic: item["Word.idTopic"],
+      };
     });
     return {
       errCode: 0,
       errMessage: "Successfully",
-      listPersonWord: listPersonWord,
+      listWord: transformedList,
     };
   } catch (error) {
     return { errCode: 0, errMessage: error };
@@ -404,6 +421,103 @@ let handleEditTest = async (req) => {
     };
   }
 };
+let handleUpdateScore = async (data) => {
+  try {
+    let userUpdate = await db.User.findByPk(data.idPerson);
+    await db.User.update(
+      { totalScore: Number(data.score) + Number(userUpdate.totalScore) },
+      { where: { id: data.idPerson } }
+    );
+    await db.User.findAll({ order: [["totalScore", "DESC"]] }).then((users) => {
+      users.forEach((user, index) => {
+        user.myrank = index + 1;
+        user.save();
+      });
+    });
+    return {
+      errCode: 0,
+      errMessage: "updateScore successfully ",
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: "update failed",
+    };
+  }
+};
+let handleChangePassword = async (data) => {
+  let { email, oldPass, newPass } = data;
+  let checkAccountIsExist = await db.User.findOne({
+    where: { email: email },
+  });
+  if (!checkAccountIsExist) {
+    return {
+      errCode: 1,
+      errMessage: "Email not found",
+    };
+  }
+  if (bcrypt.compareSync(oldPass, checkAccountIsExist.password)) {
+    let password = hashPassword(newPass);
+    await db.User.update({ password: password }, { where: { email: email } });
+    return {
+      errCode: 0,
+      errMessage: "Password change successful",
+    };
+  } else {
+    return {
+      errCode: 1,
+      errMessage: "Password incorrect",
+    };
+  }
+};
+let handleDeletePersonWord = async (data) => {
+  let { idPerson, idWord } = data;
+  try {
+    let checkWordExist = await db.PersonWord.findOne({
+      where: { idPerson, idWord },
+    });
+    if (!checkWordExist) {
+      return {
+        errCode: 1,
+        errMessage: "Word not exist",
+      };
+    }
+    await db.PersonWord.destroy({ where: { idPerson, idWord } });
+    return {
+      errCode: 0,
+      errMessage: "delete success",
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: "delete failed",
+    };
+  }
+};
+let handleCheckExistPersonWord = async (data) => {
+  let { idPerson, idWord } = data;
+  try {
+    let checkWordExist = await db.PersonWord.findOne({
+      where: { idPerson, idWord },
+    });
+    if (checkWordExist) {
+      return {
+        errCode: 0,
+        errMessage: "Word exist",
+      };
+    } else {
+      return {
+        errCode: 0,
+        errMessage: "Word is not exist",
+      };
+    }
+  } catch (error) {
+    return {
+      errCode: 0,
+      errMessage: error,
+    };
+  }
+};
 module.exports = {
   handleRegister,
   handleLogin,
@@ -416,4 +530,8 @@ module.exports = {
   handleDeleteTest,
   handleEditTest,
   handleResendOTP,
+  handleUpdateScore,
+  handleChangePassword,
+  handleDeletePersonWord,
+  handleCheckExistPersonWord,
 };

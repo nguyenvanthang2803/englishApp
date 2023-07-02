@@ -36,23 +36,21 @@ const cpUpload = upload.fields([
 ]);
 
 let initRouteAdmin = (app) => {
-  router.get("/api/listUser", adminController.ListUserController);
-  router.get("/api/InfoUser", adminController.InfoUserController);
-  router.post("/api/addTopic", adminController.AddTopicController);
-  router.post(
-    "/api/addNewWord",
-    cpUpload,
-    adminController.AddNewWordController
-  );
-  router.delete("/api/deleteTopic", adminController.DeleteTopicController);
-  router.post("/api/addNewUser", adminController.AddNewUserController);
-  router.delete("/api/deleteUser", adminController.DeleteUserController);
-  router.delete("/api/deleteWord", adminController.DeleteWordController);
-  router.get("/api/searchWord", adminController.SearchWordController);
-  router.get("/api/list-topic", adminController.ListTopicController);
-  router.put("/api/updateUser", adminController.UpdateUserController);
+  router.get("/api/listUser", adminController.ListUser);
+  router.get("/api/InfoUser", adminController.InfoUser);
+  router.post("/api/addTopic", adminController.AddTopic);
+  router.post("/api/addNewWord", cpUpload, adminController.AddNewWord);
+  router.delete("/api/deleteTopic", adminController.DeleteTopic);
+  router.post("/api/addNewUser", adminController.AddNewUser);
+  router.delete("/api/deleteUser", adminController.DeleteUser);
+  router.delete("/api/deleteWord", adminController.DeleteWord);
+  router.get("/api/searchWord", adminController.SearchWord);
+  router.get("/api/list-topic", adminController.ListTopic);
+  router.put("/api/updateUser", adminController.UpdateUser);
   router.get("/api/refreshToken");
-  router.put("/api/editTest", cpUpload, userController.EditTestController);
+  router.put("/api/editTest", cpUpload, userController.EditTest);
+  router.get("/api/getRankListUser", adminController.getRankListUser);
+  router.get("/api/getStatistical", adminController.getStatistical);
   return app.use("/", router);
 };
 

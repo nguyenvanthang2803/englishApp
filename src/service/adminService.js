@@ -40,6 +40,7 @@ let handleInfoUser = async (email) => {
         ["birthday", "birthday"],
         ["address", "address"],
         ["telephone", "telephone"],
+        ["myrank", "myrank"],
       ],
       raw: true,
     });
@@ -48,6 +49,8 @@ let handleInfoUser = async (email) => {
       .toString()
       .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
     user.gender = String(user.gender);
+    let total = await db.User.findAndCountAll();
+    user.totalUser = total.count;
     return {
       errCode: 0,
       errMessage: "Successfully",
@@ -77,17 +80,37 @@ let handleAddTopic = (topic) => {
   });
 };
 let handleSearchWord = async (data) => {
-  const listWord = await db.Word.findAll({
-    attributes: { exclude: ["createdAt", "updatedAt"] },
-    where: {
-      en: data,
-    },
-  });
-  return {
-    errCode: 0,
-    errMessage: "Successfully ",
-    listWord: listWord,
-  };
+  if (!data) {
+    const listWord = await db.Word.findAll({
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+    });
+    return {
+      errCode: 0,
+      errMessage: "Successfully ",
+      listWord: listWord,
+    };
+  } else {
+    const listWord = await db.Word.findAll({
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      where: {
+        en: data,
+      },
+      raw: true,
+    });
+    if (Object.keys(listWord).length == 0) {
+      return {
+        errCode: 1,
+        errMessage: "not exist ",
+      };
+    }
+    listWord[0].idTopic = String(listWord[0].idTopic);
+    listWord[0].id = String(listWord[0].id);
+    return {
+      errCode: 0,
+      errMessage: "Successfully ",
+      listWord: listWord,
+    };
+  }
 };
 let handleListTopic = async (req, res) => {
   try {
@@ -112,10 +135,9 @@ let handleListTopic = async (req, res) => {
       ],
       raw: true,
     });
-
     let vocabularyList = ListVocabulary.map((vocabulary) => {
       return {
-        id: vocabulary.id,
+        id: String(vocabulary["TopicVocabulary.id"]),
         en: vocabulary["TopicVocabulary.en"],
         vn: vocabulary["TopicVocabulary.vn"],
         type: vocabulary["TopicVocabulary.type"],
@@ -123,7 +145,7 @@ let handleListTopic = async (req, res) => {
         example: vocabulary["TopicVocabulary.example"],
         image: vocabulary["TopicVocabulary.image"],
         audio: vocabulary["TopicVocabulary.audio"],
-        idTopic: vocabulary["TopicVocabulary.idTopic"],
+        idTopic: String(vocabulary["TopicVocabulary.idTopic"]),
       };
     });
     if (
@@ -133,9 +155,9 @@ let handleListTopic = async (req, res) => {
       !vocabularyList[0].IPA &&
       !vocabularyList[0].example
     ) {
-      return { errCode: 0, errMessage: "False", list: null };
+      return { errCode: 0, errMessage: "False", listWord: null };
     }
-    return { errCode: 0, errMessage: "Successfully", list: vocabularyList };
+    return { errCode: 0, errMessage: "Successfully", listWord: vocabularyList };
   } catch (error) {
     return error;
   }
@@ -207,6 +229,7 @@ let handleAddNewUser = async (data) => {
   }
   let password = hashPassword(data.password);
   try {
+    let total = await db.User.findAndCountAll({ where: { roleId: 1 } });
     let createAccount = await db.User.create({
       email,
       password,
@@ -217,6 +240,8 @@ let handleAddNewUser = async (data) => {
       roleId: 1,
       gender,
       birthday,
+      totalScore: 0,
+      myrank: total.count + 1,
     });
     return {
       errCode: 0,
@@ -314,6 +339,104 @@ let handleDeleteTopic = async (topic) => {
     };
   }
 };
+let handleGetRankUser = async () => {
+  try {
+    let listUsers = await db.User.findAll({
+      where: { roleId: 1 },
+      order: [["myrank", "ASC"]],
+      attributes: ["myrank", "username", "totalScore", "email"],
+      raw: true,
+    });
+
+    return {
+      errCode: 0,
+      errMessage: "get successfully",
+      listUsers: listUsers,
+    };
+  } catch (error) {
+    return { errCode: 1, errMessage: error.message };
+  }
+};
+const getStatisticalUser = async () => {
+  let User50 = 0,
+    User20 = 0,
+    User100 = 0,
+    UserNew = 0;
+  let listUsers = await db.User.findAndCountAll({
+    where: { roleId: 1 },
+    attributes: ["id"],
+    raw: true,
+  });
+  listUsers = listUsers.rows;
+  const promises = listUsers.map(async (item, index) => {
+    let countWord = await db.PersonWord.findAndCountAll({
+      where: { idPerson: item.id },
+      raw: true,
+    });
+    if (countWord.count >= 10) {
+      User100 += 1;
+    }
+    if (countWord.count >= 5 && countWord.count < 10) {
+      User50 += 1;
+    }
+    if (countWord.count >= 2 && countWord.count < 5) {
+      User20 += 1;
+    }
+    if (countWord.count < 2) {
+      UserNew += 1;
+    }
+  });
+
+  await Promise.all(promises);
+  return { User100, User50, User20, UserNew };
+};
+const getStatisticalTopic = async () => {
+  let dataWord = [];
+  let listTopic = await db.Topic.findAndCountAll({
+    attributes: ["id"],
+    raw: true,
+  });
+  listTopic = listTopic.rows;
+
+  const promises = await listTopic.map(async (item) => {
+    let countTopic = await db.PersonWord.findAndCountAll({
+      include: [
+        {
+          model: db.Word,
+          required: true,
+          where: { idTopic: item.id },
+        },
+      ],
+      raw: true,
+    });
+    let topicName = await db.Topic.findOne({
+      where: { id: item.id },
+      raw: true,
+      attributes: ["topicName"],
+    });
+    topicName.count = countTopic.count;
+    dataWord.push(topicName);
+  });
+  await Promise.all(promises);
+  return dataWord;
+};
+let handleGetStatistical = async () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { User100, User50, User20, UserNew } = await getStatisticalUser();
+      const dataWord = await getStatisticalTopic();
+      resolve({
+        errCode: 0,
+        errMessage: "success",
+        dataUser: [User100, User50, User20, UserNew],
+        dataWord: dataWord,
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 module.exports = {
   handleListUser,
   handleAddTopic,
@@ -326,4 +449,6 @@ module.exports = {
   handleDeleteWord,
   handleDeleteTopic,
   handleInfoUser,
+  handleGetRankUser,
+  handleGetStatistical,
 };

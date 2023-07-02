@@ -27,16 +27,16 @@ let SendEmailOTP = async (email, OTP) => {
     console.error(error);
   }
 };
-let verifyRegisterController = async (req, res) => {
+let verifyRegister = async (req, res) => {
   let EmailMessageVerify = await emailService.handleEmailVerifyRegister(req);
   return res.status(200).json(EmailMessageVerify);
 };
-let verifyforgotPasswordOTPController = async (req, res) => {
+let verifyforgotPasswordOTP = async (req, res) => {
   let EmailMessageVerify = await emailService.handleEmailVerifyRegister(req);
   return res.status(200).json(EmailMessageVerify);
 };
 module.exports = {
   SendEmailOTP,
-  verifyRegisterController,
-  verifyforgotPasswordOTPController,
+  verifyRegister,
+  verifyforgotPasswordOTP,
 };

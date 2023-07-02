@@ -73,6 +73,7 @@ let handleEmailVerifyRegister = async (req) => {
               birthday,
             } = dataDecrypt;
             let password = hashPassword(dataDecrypt.password);
+            let total = await db.User.findAndCountAll({ where: { roleId: 1 } });
             let createAccount = await db.User.create({
               email,
               password,
@@ -83,6 +84,8 @@ let handleEmailVerifyRegister = async (req) => {
               roleId: 1,
               gender,
               birthday,
+              totalScore: 0,
+              myrank: total.count + 1,
             });
             {
               (dataReturn.errCode = 0),
