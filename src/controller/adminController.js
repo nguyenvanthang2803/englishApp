@@ -53,6 +53,20 @@ let getStatistical = async (req, res) => {
   let messageGetStatistical = await adminService.handleGetStatistical();
   return res.status(200).json(messageGetStatistical);
 };
+let getListQuestion = async (req, res) => {
+  let messageGetListQuestion = await adminService.handleGetListQuestion(
+    req.query.typeTest
+  );
+  return res.status(200).json(messageGetListQuestion);
+};
+let getListTypeTest = async (req, res) => {
+  let messageGetListTypeTest = await adminService.handleGetListTypeTest();
+  return res.status(200).json(messageGetListTypeTest);
+};
+let addNewQuestion = async (req, res) => {
+  let messageAddNewQuestion = await adminService.handleAddNewQuestion(req.body);
+  return res.status(200).json(messageAddNewQuestion);
+};
 module.exports = {
   ListUser,
   SearchWord,
@@ -67,4 +81,7 @@ module.exports = {
   InfoUser,
   getRankListUser,
   getStatistical,
+  getListQuestion,
+  getListTypeTest,
+  addNewQuestion,
 };

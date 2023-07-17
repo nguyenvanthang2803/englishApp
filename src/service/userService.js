@@ -7,6 +7,15 @@ import bcrypt from "bcrypt";
 let handleRegister = async (data) => {
   try {
     let { email } = data;
+    let checkEmailBlackList = await db.BlackList.findOne({
+      where: { email: email },
+    });
+    if (checkEmailBlackList) {
+      return {
+        errCode: 1,
+        errMessage: "Your email be blocked in 1 day",
+      };
+    }
     let checkAccountIsExist = await db.User.findOne({
       where: { email: email },
     });
@@ -96,54 +105,57 @@ let handleResendOTP = async (email) => {
   };
 };
 let handleLogin = async (data) => {
-  let { email, password } = data;
+  try {
+    let { email, password } = data;
+    let checkAccountLogin = await db.User.findOne({
+      where: { email: email, roleId: 1 },
+      raw: true,
+      attributes: { exclude: ["createdAt", "updatedAt", "roleId"] },
+      include: [
+        {
+          model: db.Role,
+          as: "Role",
+          attributes: ["role"],
+          required: true,
+        },
+      ],
+    });
 
-  let checkAccountLogin = await db.User.findOne({
-    where: { email: email },
-    raw: true,
-    attributes: { exclude: ["createdAt", "updatedAt", "roleId"] },
-    include: [
-      {
-        model: db.Role,
-        as: "Role",
-        attributes: ["role"],
-        required: true,
-      },
-    ],
-  });
-
-  if (
-    checkAccountLogin &&
-    bcrypt.compareSync(password, checkAccountLogin.password)
-  ) {
-    checkAccountLogin.Role = checkAccountLogin["Role.role"];
-    delete checkAccountLogin["Role.role"];
-    delete checkAccountLogin["password"];
-    const token = jwt.sign(
-      {
-        token: generateRandomToken(),
-      },
-      process.env.TOKEN_KEY,
-      {
-        expiresIn: "1w",
-      }
-    );
-    checkAccountLogin.id = String(checkAccountLogin.id);
-    return {
-      errCode: 0,
-      errMessage: "Login Successfully",
-      userData: {
-        id: checkAccountLogin.id,
-        email: checkAccountLogin.email,
-        Role: checkAccountLogin.Role,
-      },
-      token,
-    };
-  } else {
-    return {
-      errCode: 1,
-      errMessage: "Email or Password wrong",
-    };
+    if (
+      checkAccountLogin &&
+      bcrypt.compareSync(password, checkAccountLogin.password)
+    ) {
+      checkAccountLogin.Role = checkAccountLogin["Role.role"];
+      delete checkAccountLogin["Role.role"];
+      delete checkAccountLogin["password"];
+      const token = jwt.sign(
+        {
+          token: generateRandomToken(),
+        },
+        process.env.TOKEN_KEY,
+        {
+          expiresIn: "1w",
+        }
+      );
+      checkAccountLogin.id = String(checkAccountLogin.id);
+      return {
+        errCode: 0,
+        errMessage: "Login Successfully",
+        userData: {
+          id: checkAccountLogin.id,
+          email: checkAccountLogin.email,
+          Role: checkAccountLogin.Role,
+        },
+        token,
+      };
+    } else {
+      return {
+        errCode: 1,
+        errMessage: "Email or Password wrong",
+      };
+    }
+  } catch (error) {
+    console.error(error);
   }
 };
 function generateRandomToken() {

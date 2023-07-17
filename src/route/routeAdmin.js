@@ -51,6 +51,9 @@ let initRouteAdmin = (app) => {
   router.put("/api/editTest", cpUpload, userController.EditTest);
   router.get("/api/getRankListUser", adminController.getRankListUser);
   router.get("/api/getStatistical", adminController.getStatistical);
+  router.get("/api/listQuestion", adminController.getListQuestion);
+  router.get("/api/listTypeTest", adminController.getListTypeTest);
+  router.post("/api/addNewQuestion", adminController.addNewQuestion);
   return app.use("/", router);
 };
 

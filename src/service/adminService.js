@@ -436,7 +436,72 @@ let handleGetStatistical = async () => {
     }
   });
 };
+let handleGetListTypeTest = async () => {
+  try {
+    let listTest = await db.TypeTest.findAll({ attributes: ["name"] });
+    return {
+      errCode: 0,
+      errMessage: "success",
+      listTest: listTest,
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: error.message,
+    };
+  }
+};
+let handleGetListQuestion = async (typeTest) => {
+  try {
+    let getQuestion = await db.TypeTest.findAll({
+      where: { name: typeTest },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      include: [
+        {
+          model: db.Test,
+          attributes: ["name", "keyA", "keyB", "keyC", "keyD", "keyCorrect"],
+        },
+      ],
+    });
+    let listQuestion = getQuestion.map((item) => {
+      return item.Test;
+    });
+    return {
+      errCode: 0,
+      listQuestion: listQuestion,
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: error.message,
+    };
+  }
+};
+let handleAddNewQuestion = async (data) => {
+  try {
+    console.log(data);
+    let { name, keyA, keyB, keyC, keyD, keyCorrect, idTypeTest } = data;
 
+    let addQuestion = await db.Test.create({
+      name,
+      keyA,
+      keyB,
+      keyC,
+      keyD,
+      keyCorrect,
+      idTypeTest,
+    });
+    return {
+      errCode: 0,
+      errMessage: "successfull",
+    };
+  } catch (error) {
+    return {
+      errCode: 1,
+      errMessage: error.message,
+    };
+  }
+};
 module.exports = {
   handleListUser,
   handleAddTopic,
@@ -451,4 +516,7 @@ module.exports = {
   handleInfoUser,
   handleGetRankUser,
   handleGetStatistical,
+  handleGetListTypeTest,
+  handleGetListQuestion,
+  handleAddNewQuestion,
 };

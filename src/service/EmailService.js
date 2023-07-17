@@ -1,6 +1,18 @@
 import db from "../models";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+async function blockemail(email) {
+  await db.BlackList.create({ email });
+  var currentDate = new Date();
+  var nextDay = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000); // Thêm 1 ngày (24 giờ)
+  var scheduleDeleteCode = schedule.scheduleJob(nextDay, async () => {
+    await db.BlackList.destroy({
+      where: {
+        email: email,
+      },
+    });
+  });
+}
 let handleEmailVerifyRegister = async (req) => {
   // Tạo một đối tượng giải mã với thuật toán AES-256-CBC
   let data = req.body;
@@ -122,22 +134,24 @@ let handleEmailVerifyRegister = async (req) => {
             email: email,
           },
         });
+        blockemail(email);
         if (req.originalUrl == "/api/verifyforgotPasswordOTP") {
           await db.User.destroy({
             where: {
               email: email,
             },
           });
-
+          blockemail(email);
           return {
             errCode: 1,
-            errMessage: "Verify Code Wrong, your account be deleted",
+            errMessage:
+              "Verify Code Wrong more 3 times, your account don't use OTP in 1 day",
           };
         }
         {
           (dataReturn.errCode = 1),
             (dataReturn.errorMessage =
-              "Verify Code Wrong, Please Excecute again");
+              "Verify Code Wrong more 3 times, your email be blocked in 1 day");
         }
       }
     }
